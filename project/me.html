@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dipesh | YouTube Portfolio</title>
+<link rel="icon" href="me.png">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background: #0f172a;
+    color: white;
+}
+
+/* TOP BAR */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #2563eb;
+    color: white;
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 20px;
+    z-index: 999;
+    box-shadow: 0 2px 5px #00000055;
+}
+
+.top-bar .bell {
+    cursor: pointer;
+    font-size: 22px;
+    transition: transform 0.2s;
+}
+
+.top-bar .bell:hover {
+    transform: scale(1.2);
+}
+
+/* HEADER */
+header {
+    text-align: center;
+    padding: 80px 20px 40px 20px; /* add top padding for fixed bar */
+    background: linear-gradient(135deg, #7c3aed, #2563eb);
+}
+
+header h1 {
+    font-size: 40px;
+}
+
+header p {
+    margin: 10px 0 20px;
+}
+
+header button {
+    background: red;
+    border: none;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+header button:hover {
+    opacity: 0.9;
+}
+
+/* SUBSCRIBERS COUNTER */
+.sub-counter {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.sub-counter h2 {
+    font-size: 22px;
+    opacity: 0.9;
+}
+
+.sub-counter p {
+    font-size: 42px;
+    font-weight: bold;
+    color: #ff0000;
+}
+
+/* VIDEOS */
+.videos {
+    padding: 40px 20px;
+}
+
+.videos h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    max-width: 1100px;
+    margin: auto;
+}
+
+.video-card {
+    background: #020617;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.video-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 20px #2563eb55;
+}
+
+.video-card img {
+    width: 100%;
+    display: block;
+}
+
+.video-card h3 {
+    padding: 10px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* NEWS SECTION */
+.news {
+    padding: 40px 20px;
+    max-width: 900px;
+    margin: auto;
+}
+
+.news h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.news-card {
+    background: #020617;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-left: 5px solid #2563eb;
+}
+
+.news-card h3 {
+    margin-bottom: 8px;
+}
+
+.news-card small {
+    opacity: 0.7;
+}
+
+.news-card p {
+    margin-top: 10px;
+    line-height: 1.6;
+}
+
+.badge {
+    display: inline-block;
+    background: #22c55e;
+    color: black;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    margin-left: 8px;
+}
+
+/* FOOTER */
+footer {
+    text-align: center;
+    padding: 15px;
+    background: #020617;
+    margin-top: 40px;
+    opacity: 0.8;
+}
+</style>
+<link rel="icon" href="/me.png">
+</head>
+<body>
+    
+
+<!-- TOP BAR WITH BELL ICON -->
+<div class="top-bar">
+    <span class="bell" onclick="goToNews()">🔔</span>
+</div>
+
+<!-- HEADER -->
+<header>
+    <h1>Notdipesh0</h1>
+    <p>Minecraft Gamer & YouTube Creator 🎮</p>
+    <button onclick="subscribe()">Subscribe on YouTube</button>
+</header>
+
+<!-- SUBSCRIBERS COUNTER -->
+<div class="sub-counter">
+    <h2>Subscribers</h2>
+    <p id="subCount">Loading...</p>
+</div>
+
+<!-- VIDEOS SECTION -->
+<section class="videos">
+    <h2>Latest Videos</h2>
+    <div class="video-grid" id="videoGrid">
+        Loading videos...
+    </div>
+</section>
+
+<!-- NEWS & ANNOUNCEMENTS -->
+<section class="news" id="newsSection">
+    <h2>News & Announcements 📢</h2>
+
+    <div class="news-card">
+        <h3>🎉 New Video Coming! <span class="badge">NEW</span></h3>
+        <small>25 December 2025</small>
+        <p>Minecraft Survival Part 3 drops tomorrow 🔥</p>
+    </div>
+
+    <div class="news-card">
+        <h3>🚀 Road to 1K Subs</h3>
+        <small>20 December 2025</small>
+        <p>Help me reach 1000 subscribers — share the channel ❤️</p>
+    </div>
+
+</section>
+
+<!-- FOOTER -->
+<footer>
+    © 2025 Notdipesh0 | YouTube Portfolio
+</footer>
+
+<!-- JAVASCRIPT -->
+<script>
+// Subscribe Button
+function subscribe() {
+    window.open("https://www.youtube.com/@NOTDIPESH0?sub_confirmation=1", "_blank");
+}
+
+// Scroll to News Section when bell is clicked
+function goToNews() {
+    document.getElementById("newsSection").scrollIntoView({behavior: "smooth"});
+}
+
+// Fetch YouTube Videos
+const API_KEY = "AIzaSyDjcGWH94XupVfkwdKKJl6E4LmcSOtFjHc";
+const CHANNEL_ID = "UCOIZBwJjo208LaT4EUd9yUw";
+const MAX_RESULTS = 70;
+
+fetch(
+  `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&channelId=UCOIZBwJjo208LaT4EUd9yUw&order=date&maxResults=${MAX_RESULTS}&key=AIzaSyDjcGWH94XupVfkwdKKJl6E4LmcSOtFjHc`
+)
+.then(res => res.json())
+.then(data => {
+    const grid = document.getElementById("videoGrid");
+    grid.innerHTML = "";
+
+    data.items.forEach(item => {
+        const videoId = item.id.videoId;
+        const title = item.snippet.title;
+        const thumbnail = item.snippet.thumbnails.high.url;
+        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
+
+        const card = document.createElement("div");
+        card.className = "video-card";
+        card.onclick = () => window.open(videoUrl, "_blank");
+
+        card.innerHTML = `
+            <img src="${thumbnail}" alt="${title}">
+            <h3>${title}</h3>
+        `;
+
+        grid.appendChild(card);
+    });
+})
+.catch(err => {
+    document.getElementById("videoGrid").innerText =
+        "Failed to load videos 😢";
+    console.error(err);
+});
+
+// Fetch Subscriber Count
+function fetchSubscribers() {
+    fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=UCOIZBwJjo208LaT4EUd9yUw&key=AIzaSyDjcGWH94XupVfkwdKKJl6E4LmcSOtFjHc`)
+    .then(res => res.json())
+    .then(data => {
+        const subs = data.items[0].statistics.subscriberCount;
+        document.getElementById("subCount").innerText = Number(subs).toLocaleString();
+    })
+    .catch(() => {
+        document.getElementById("subCount").innerText = "Hidden";
+    });
+}
+fetchSubscribers();
+setInterval(fetchSubscribers, 120000);
+</script>
+
+</body>
+</html>
