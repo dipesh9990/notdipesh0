@@ -23,7 +23,7 @@ animateToNumber(viewEl, views);
   },
 
   videos: [
-    { id: "dQw4w9WgXcQ", title: "Video", views: "48K views", date: "2 days ago", duration: "18:32" }
+    { id: "msi0mmySPv8", title: "Video", views: "48K views", date: "2 days ago", duration: "18:32" }
   ],
 };
 
