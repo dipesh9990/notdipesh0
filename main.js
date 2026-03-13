@@ -23,10 +23,10 @@ animateToNumber(viewEl, views);
   },
 
   videos: [
-    { id: "dQw4w9WgXcQ", }
-  ],
-};
-
+     { id: "dQw4w9WgXcQ", 
+  
+},
+];
 // ─────────────────────────────────────────────
 // HAMBURGER MENU
 // ─────────────────────────────────────────────
