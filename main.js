@@ -10,7 +10,7 @@ const CONFIG = {
   channelName: "Notdipesh0",
   youtubeChannelUrl: "https://www.youtube.com/@Notdipesh0",
   youtubeChannelId: "UCOIZBwJjo208LaT4EUd9yUw",
-  youtubeApiKey: "",                 // Optional: add a YouTube Data API key for live data
+  youtubeApiKey: "AIzaSyDjcGWH94XupVfkwdKKJl6E4LmcSOtFjHc",                 // Optional: add a YouTube Data API key for live data
 
   // Placeholder stats (shown until API loads or if no API key)
   stats: {
