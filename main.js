@@ -1,28 +1,24 @@
 /* =============================================
-   NeonPlay — main.js
-   Dynamic video cards, stats, scroll reveals
+   Notdipesh0 — main.js
+   Live YouTube stats, videos, scroll reveals
    ============================================= */
 
 // ─────────────────────────────────────────────
-// CONFIG — edit these to personalise your site
+// CONFIG
 // ─────────────────────────────────────────────
 const CONFIG = {
   channelName: "Notdipesh0",
   youtubeChannelUrl: "https://www.youtube.com/@Notdipesh0",
   youtubeChannelId: "UCOIZBwJjo208LaT4EUd9yUw",
   youtubeApiKey: "AIzaSyDjcGWH94XupVfkwdKKJl6E4LmcSOtFjHc",
+  stats: {
+    subscribers: "---",
+    videos: "---",
+    views: "---",
+  },
+  videos: [],
+};
 
-
-   stats: {
-  subscribers: "0",
-  videos: "0",
-  views: "0",
-},
- 
-
-  videos: [
-    
-];
 // ─────────────────────────────────────────────
 // HAMBURGER MENU
 // ─────────────────────────────────────────────
@@ -48,7 +44,7 @@ document.addEventListener("click", (e) => {
 });
 
 // ─────────────────────────────────────────────
-// LIVE STAT COUNTER
+// NUMBER FORMATTER + ANIMATOR
 // ─────────────────────────────────────────────
 function formatLiveNumber(n) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
@@ -59,7 +55,6 @@ function formatLiveNumber(n) {
 function animateToNumber(el, num) {
   const start = performance.now();
   const duration = 1800;
-
   function step(now) {
     const progress = Math.min((now - start) / duration, 1);
     const eased = 1 - Math.pow(1 - progress, 3);
@@ -67,12 +62,13 @@ function animateToNumber(el, num) {
     el.textContent = formatLiveNumber(current);
     if (progress < 1) requestAnimationFrame(step);
   }
-
   requestAnimationFrame(step);
 }
 
+// ─────────────────────────────────────────────
+// LIVE CHANNEL STATS (YouTube Data API v3)
+// ─────────────────────────────────────────────
 async function loadStats() {
-
   const subEl = document.getElementById("subCount");
   const vidEl = document.getElementById("vidCount");
   const viewEl = document.getElementById("viewCount");
@@ -84,7 +80,6 @@ async function loadStats() {
   viewEl.textContent = "...";
 
   try {
-
     const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${CONFIG.youtubeChannelId}&key=${CONFIG.youtubeApiKey}`;
     const res = await fetch(url);
     const data = await res.json();
@@ -92,19 +87,15 @@ async function loadStats() {
     if (!data.items?.length) throw new Error("No channel data");
 
     const stats = data.items[0].statistics;
-
     animateToNumber(subEl, parseInt(stats.subscriberCount || 0));
     animateToNumber(vidEl, parseInt(stats.videoCount || 0));
     animateToNumber(viewEl, parseInt(stats.viewCount || 0));
 
   } catch (err) {
-
-    console.warn("Could not fetch live stats:", err);
-
+    console.warn("Stats fetch failed:", err);
     subEl.textContent = CONFIG.stats.subscribers;
     vidEl.textContent = CONFIG.stats.videos;
     viewEl.textContent = CONFIG.stats.views;
-
   }
 }
 
@@ -112,17 +103,13 @@ async function loadStats() {
 // RELATIVE TIME HELPER
 // ─────────────────────────────────────────────
 function relativeTime(dateStr) {
-  const now = new Date();
-  const then = new Date(dateStr);
-  const diff = Math.floor((now - then) / 1000);
-
+  const diff = Math.floor((new Date() - new Date(dateStr)) / 1000);
   if (diff < 60) return "Just now";
   if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
   if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
   if (diff < 2592000) return `${Math.floor(diff / 604800)} weeks ago`;
   if (diff < 31536000) return `${Math.floor(diff / 2592000)} months ago`;
-
   return `${Math.floor(diff / 31536000)} years ago`;
 }
 
@@ -130,14 +117,16 @@ function relativeTime(dateStr) {
 // RENDER VIDEO CARDS
 // ─────────────────────────────────────────────
 function renderVideoCards(videos) {
-
   const grid = document.getElementById("videosGrid");
   if (!grid) return;
-
   grid.innerHTML = "";
 
-  videos.forEach((vid, i) => {
+  if (videos.length === 0) {
+    grid.innerHTML = `<p style="color:rgba(255,255,255,0.4);text-align:center;grid-column:1/-1;padding:40px;">No videos found.</p>`;
+    return;
+  }
 
+  videos.forEach((vid, i) => {
     const thumb = vid.thumb || `https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg`;
     const fallback = `https://img.youtube.com/vi/${vid.id}/hqdefault.jpg`;
     const url = `https://www.youtube.com/watch?v=${vid.id}`;
@@ -158,7 +147,7 @@ function renderVideoCards(videos) {
       <div class="video-info">
         <h3>${vid.title}</h3>
         <div class="video-meta">
-          <span>👁 ${vid.views || ""}</span>
+          ${vid.views ? `<span>👁 ${vid.views}</span>` : ""}
           <span>📅 ${vid.date}</span>
         </div>
       </div>
@@ -171,51 +160,61 @@ function renderVideoCards(videos) {
 }
 
 // ─────────────────────────────────────────────
-// FETCH LIVE VIDEOS
+// LIVE LATEST VIDEOS (YouTube Data API v3)
 // ─────────────────────────────────────────────
 async function buildVideoCards() {
-
   const grid = document.getElementById("videosGrid");
   if (!grid) return;
 
+  // Loading skeleton
+  grid.innerHTML = Array(6).fill(`
+    <div class="video-card" style="pointer-events:none;">
+      <div class="video-thumb" style="background:rgba(255,255,255,0.05);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:2rem;opacity:0.3;">⏳</span>
+      </div>
+      <div class="video-info">
+        <div style="height:14px;background:rgba(255,255,255,0.07);border-radius:6px;margin-bottom:10px;"></div>
+        <div style="height:14px;background:rgba(255,255,255,0.04);border-radius:6px;width:60%;"></div>
+      </div>
+    </div>
+  `).join("");
+
   try {
+    // Step 1: Get latest 6 video IDs + snippets
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${CONFIG.youtubeApiKey}&channelId=${CONFIG.youtubeChannelId}&part=snippet&order=date&maxResults=6&type=video`;
+    const searchRes = await fetch(searchUrl);
+    const searchData = await searchRes.json();
 
-    const searchUrl =
-      `https://www.googleapis.com/youtube/v3/search?key=${CONFIG.youtubeApiKey}&channelId=${CONFIG.youtubeChannelId}&part=snippet&order=date&maxResults=6&type=video`;
+    if (!searchData.items?.length) throw new Error("No videos found");
 
-    const res = await fetch(searchUrl);
-    const data = await res.json();
+    // Step 2: Get view counts for those videos
+    const ids = searchData.items.map((v) => v.id.videoId).join(",");
+    const statsRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?key=${CONFIG.youtubeApiKey}&part=statistics&id=${ids}`);
+    const statsData = await statsRes.json();
 
-    const ids = data.items.map(v => v.id.videoId).join(",");
+    const statsMap = {};
+    statsData.items?.forEach((item) => {
+      statsMap[item.id] = item.statistics;
+    });
 
-    const videoRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?key=${CONFIG.youtubeApiKey}&part=contentDetails,statistics&id=${ids}`
-    );
-
-    const videoData = await videoRes.json();
-
-    const videos = data.items.map((item, i) => {
-
-      const extra = videoData.items[i];
-
+    const videos = searchData.items.map((item) => {
+      const videoId = item.id.videoId;
+      const views = parseInt(statsMap[videoId]?.viewCount || 0);
       return {
-        id: item.id.videoId,
+        id: videoId,
         title: item.snippet.title,
         date: relativeTime(item.snippet.publishedAt),
-        thumb: item.snippet.thumbnails.high?.url,
-        views: formatLiveNumber(parseInt(extra?.statistics?.viewCount || 0)) + " views",
+        thumb: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+        views: formatLiveNumber(views) + " views",
         duration: "",
       };
-
     });
 
     renderVideoCards(videos);
 
   } catch (err) {
-
-    console.warn("Could not fetch live videos:", err);
+    console.warn("Videos fetch failed:", err);
     renderVideoCards(CONFIG.videos);
-
   }
 }
 
@@ -239,10 +238,9 @@ function initReveal() {
 }
 
 // ─────────────────────────────────────────────
-// ACTIVE NAV
+// ACTIVE NAV LINK ON SCROLL
 // ─────────────────────────────────────────────
 function initActiveNav() {
-
   const sections = document.querySelectorAll("section[id]");
   const navLinks = document.querySelectorAll(".nav-links a");
 
@@ -272,9 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initActiveNav();
 });
 
-// ─────────────────────────────────────────────
-// ACTIVE NAV STYLE
-// ─────────────────────────────────────────────
+// Active nav highlight style
 const style = document.createElement("style");
 style.textContent = `.nav-links a.active { color: var(--yellow) !important; }`;
 document.head.appendChild(style);
