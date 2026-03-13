@@ -10,42 +10,14 @@ const CONFIG = {
   channelName: "Notdipesh0",
   youtubeChannelUrl: "https://www.youtube.com/@Notdipesh0",
   youtubeChannelId: "UCOIZBwJjo208LaT4EUd9yUw",
-  youtubeApiKey: "AIzaSyDjcGWH94XupVfkwdKKJl6E4LmcSOtFjHc",                 // Optional: add a YouTube Data API key for live data
+  youtubeApiKey: "AIzaSyDjcGWH94XupVfkwdKKJl6E4LmcSOtFjHc",
 
   // Placeholder stats (shown until API loads or if no API key)
- async function getChannelStats() {
-
-const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails&id=${channelId}&key=${apiKey}`;
-
-const res = await fetch(url);
-const data = await res.json();
-
-const stats = data.items[0].statistics;
-
-document.getElementById("subs").innerText = stats.subscriberCount;
-document.getElementById("views").innerText = stats.viewCount;
-document.getElementById("videos").innerText = stats.videoCount;
-
-}
-
-async function getLatestVideo() {
-
-const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet&order=date&maxResults=1`;
-
-const res = await fetch(searchUrl);
-const data = await res.json();
-
-const videoId = data.items[0].id.videoId;
-
-document.getElementById("latestVideo").innerHTML =
-`<iframe width="400" height="225"
-src="https://www.youtube.com/embed/${videoId}"
-frameborder="0" allowfullscreen></iframe>`;
-
-}
-
-getChannelStats();
-getLatestVideo();
+  stats: {
+    subscribers: "12.4K",
+    videos: "87",
+    views: "1.2M",
+  },
 
   // Featured / latest video IDs — replace these with your actual YouTube video IDs
   // Find the ID in the YouTube URL: youtube.com/watch?v=VIDEO_ID
@@ -117,45 +89,54 @@ document.addEventListener("click", (e) => {
 });
 
 // ─────────────────────────────────────────────
-// ANIMATED STAT COUNTER
+// LIVE STAT COUNTER (YouTube API)
 // ─────────────────────────────────────────────
-function parseStatValue(val) {
-  if (!val) return 0;
-  const str = val.toString().toUpperCase();
-  if (str.endsWith("M")) return parseFloat(str) * 1_000_000;
-  if (str.endsWith("K")) return parseFloat(str) * 1_000;
-  return parseFloat(str.replace(/,/g, ""));
+function formatLiveNumber(n) {
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
+  return n.toLocaleString();
 }
 
-function formatStatValue(num, original) {
-  const str = original.toString().toUpperCase();
-  if (str.endsWith("M")) return (num / 1_000_000).toFixed(1) + "M";
-  if (str.endsWith("K")) return Math.round(num / 1_000) + "K";
-  return num.toLocaleString();
-}
-
-function animateStat(el, target, original, duration = 1800) {
+function animateToNumber(el, num) {
   const start = performance.now();
-  const from = 0;
-  const to = parseStatValue(target);
+  const duration = 1800;
   function step(now) {
-    const elapsed = now - start;
-    const progress = Math.min(elapsed / duration, 1);
+    const progress = Math.min((now - start) / duration, 1);
     const eased = 1 - Math.pow(1 - progress, 3);
-    const current = Math.round(from + (to - from) * eased);
-    el.textContent = formatStatValue(current, original);
+    const current = Math.round(num * eased);
+    el.textContent = formatLiveNumber(current);
     if (progress < 1) requestAnimationFrame(step);
   }
   requestAnimationFrame(step);
 }
 
-function loadStats() {
+async function loadStats() {
   const subEl = document.getElementById("subCount");
   const vidEl = document.getElementById("vidCount");
   const viewEl = document.getElementById("viewCount");
-  animateStat(subEl, CONFIG.stats.subscribers, CONFIG.stats.subscribers);
-  animateStat(vidEl, CONFIG.stats.videos, CONFIG.stats.videos);
-  animateStat(viewEl, CONFIG.stats.views, CONFIG.stats.views);
+
+  subEl.textContent = "...";
+  vidEl.textContent = "...";
+  viewEl.textContent = "...";
+
+  try {
+    const url = `https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails&id=${CONFIG.youtubeChannelId}&key=${CONFIG.youtubeApiKey}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.items || data.items.length === 0) throw new Error("No channel data");
+
+    const stats = data.items[0].statistics;
+    animateToNumber(subEl, parseInt(stats.subscriberCount || 0));
+    animateToNumber(vidEl, parseInt(stats.videoCount || 0));
+    animateToNumber(viewEl, parseInt(stats.viewCount || 0));
+
+  } catch (err) {
+    console.warn("Could not fetch live stats:", err);
+    subEl.textContent = CONFIG.stats.subscribers;
+    vidEl.textContent = CONFIG.stats.videos;
+    viewEl.textContent = CONFIG.stats.views;
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -183,7 +164,7 @@ function renderVideoCards(videos) {
   grid.innerHTML = "";
 
   videos.forEach((vid, i) => {
-    const thumb = `https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg`;
+    const thumb = vid.thumb || `https://img.youtube.com/vi/${vid.id}/maxresdefault.jpg`;
     const fallback = `https://img.youtube.com/vi/${vid.id}/hqdefault.jpg`;
     const url = `https://www.youtube.com/watch?v=${vid.id}`;
 
@@ -215,12 +196,12 @@ function renderVideoCards(videos) {
 }
 
 // ─────────────────────────────────────────────
-// FETCH LIVE VIDEOS FROM YOUTUBE RSS FEED
+// FETCH LIVE VIDEOS FROM YOUTUBE SEARCH API
 // ─────────────────────────────────────────────
 async function buildVideoCards() {
   const grid = document.getElementById("videosGrid");
 
-  // Show loading skeleton
+  // Loading skeleton
   grid.innerHTML = Array(6).fill(`
     <div class="video-card" style="pointer-events:none;">
       <div class="video-thumb" style="background:rgba(255,255,255,0.05);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;">
@@ -234,28 +215,19 @@ async function buildVideoCards() {
   `).join("");
 
   try {
-    const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${CONFIG.youtubeChannelId}`;
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
-    const res = await fetch(proxyUrl);
+    const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${CONFIG.youtubeApiKey}&channelId=${CONFIG.youtubeChannelId}&part=snippet&order=date&maxResults=6&type=video`;
+    const res = await fetch(searchUrl);
     const data = await res.json();
 
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(data.contents, "text/xml");
-    const entries = Array.from(xml.querySelectorAll("entry")).slice(0, 6);
+    if (!data.items || data.items.length === 0) throw new Error("No videos found");
 
-    if (entries.length === 0) throw new Error("No entries found");
-
-    const videos = entries.map((entry) => {
-      const rawId = entry.querySelector("videoId")?.textContent || "";
-      const title = entry.querySelector("title")?.textContent || "Untitled";
-      const published = entry.querySelector("published")?.textContent || "";
-      return {
-        id: rawId,
-        title: title,
-        date: relativeTime(published),
-        duration: "",
-      };
-    });
+    const videos = data.items.map((item) => ({
+      id: item.id.videoId,
+      title: item.snippet.title,
+      date: relativeTime(item.snippet.publishedAt),
+      thumb: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url,
+      duration: "",
+    }));
 
     renderVideoCards(videos);
 
