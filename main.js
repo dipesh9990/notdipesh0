@@ -13,9 +13,13 @@ const CONFIG = {
   youtubeApiKey: "AIzaSyDjcGWH94XupVfkwdKKJl6E4LmcSOtFjHc",
 
   stats: {
-    subscribers: "12.4K",
-    videos: "87",
-    views: "1.2M",
+    const subs = Number(stats.subscriberCount);
+const vids = Number(stats.videoCount);
+const views = Number(stats.viewCount);
+
+animateToNumber(subEl, subs);
+animateToNumber(vidEl, vids);
+animateToNumber(viewEl, views);
   },
 
   videos: [
